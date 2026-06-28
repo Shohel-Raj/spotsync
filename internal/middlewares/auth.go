@@ -8,6 +8,11 @@ import (
 	"github.com/labstack/echo/v5"
 )
 
+const (
+	roleAdmin  = "admin"
+	driverRole = "driver"
+)
+
 func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
@@ -44,8 +49,38 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 			c.Set("user_id", claims.UserID)
 			c.Set("user_email", claims.Email)
 			c.Set("user_name", claims.Name)
+			c.Set("user_role", claims.Role)
 
 			return next(c)
 		}
 	}
 }
+func AdminOnly(role string) echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c *echo.Context) error {
+
+			userRole := c.Get("user_role")
+			if userRole != roleAdmin {
+				return c.JSON(http.StatusForbidden, map[string]string{
+					"error": "admin permission required",
+				})
+			}
+
+			return next(c)
+		}
+	}
+}
+
+// func AdminOnly(next echo.HandlerFunc) echo.HandlerFunc {
+//     return func(c echo.Context) error {
+//         role, ok := c.Get("user_role").(string)
+//         if !ok || role != "admin" {
+//             return c.JSON(http.StatusForbidden, map[string]any{
+//                 "success": false,
+//                 "message": "forbidden",
+//                 "errors":  "admin permission required",
+//             })
+//         }
+//         return next(c)
+//     }
+// }
