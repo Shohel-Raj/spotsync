@@ -15,6 +15,20 @@ type handler struct {
 	service *service
 }
 
+func parkingZoneErrorResponse(c *echo.Context, err error) error {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return c.JSON(http.StatusNotFound, httpresponse.Error{
+			Code:    http.StatusNotFound,
+			Message: "Parking Zone not found",
+		})
+	}
+
+	return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+		Code:    http.StatusInternalServerError,
+		Message: "Something went wrong",
+		Details: err.Error(),
+	})
+}
 func NewHandler(service *service) *handler {
 	return &handler{
 		service: service,
@@ -93,5 +107,80 @@ func (h *handler) GetParkingZoneByID(c *echo.Context) error {
 		"success": true,
 		"message": "Parking Zone retrieved successfully",
 		"data":    parkingZone,
+	})
+}
+
+func (h *handler) updateParkingZone(c *echo.Context) error {
+
+	parkingZoneID, err := strconv.ParseUint(c.Param("id"), 10, 0)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid Parking Zone ID",
+			Details: err.Error(),
+		})
+	}
+	var req dto.UpdateParkingZoneRequest
+
+	if err := c.Bind(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid request payload",
+			Details: err.Error(),
+		})
+	}
+	if err := c.Validate(&req); err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Validation failed",
+			Details: err.Error(),
+		})
+	}
+
+	response, err := h.service.UpdateParkingZone(uint(parkingZoneID), req)
+	if err != nil {
+		return parkingZoneErrorResponse(c, err)
+	}
+
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "Parking Zone updated successfully",
+		"data":    response,
+	})
+
+}
+
+func (h *handler) DeleteParkingZone(c *echo.Context) error {
+	parkingZoneID, err := strconv.ParseUint(c.Param("id"), 10, 0)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, httpresponse.Error{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid Parking Zone ID",
+			Details: err.Error(),
+		})
+	}
+	parkingZone, err := h.service.GetParkingZoneByID(uint(parkingZoneID))
+	if err != nil || parkingZone == nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.JSON(http.StatusNotFound, httpresponse.Error{
+				Code:    http.StatusNotFound,
+				Message: "Parking Zone not found",
+				Details: err.Error(),
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, httpresponse.Error{
+			Code:    http.StatusInternalServerError,
+			Message: "Failed to retrieve Parking Zone",
+			Details: err.Error(),
+		})
+	}
+
+	err = h.service.DeleteParkingZone(uint(parkingZoneID))
+	if err != nil {
+		return parkingZoneErrorResponse(c, err)
+	}
+	return c.JSON(http.StatusOK, map[string]interface{}{
+		"success": true,
+		"message": "Parking Zone deleted successfully",
 	})
 }

@@ -6,3 +6,9 @@ type CreateParkingZoneRequest struct {
 	TotalCapacity int     `json:"total_capacity"`
 	PricePerHour  float64 `json:"price_per_hour"`
 }
+type UpdateParkingZoneRequest struct {
+	Name          *string  `json:"name"`
+	Type          *string  `json:"type"`
+	TotalCapacity *int     `json:"total_capacity"`
+	PricePerHour  *float64 `json:"price_per_hour"`
+}

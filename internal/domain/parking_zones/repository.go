@@ -12,6 +12,8 @@ type Repository interface {
 	CreateParkingZone(zone *ParkingZone) error
 	GetParkingZoneByID(id uint) (*ParkingZone, error)
 	GetAllParkingZones() ([]*ParkingZone, error)
+	UpdateParkingZone(id uint, zone *ParkingZone) error
+	DeleteParkingZone(id uint) error
 }
 
 type repository struct {
@@ -48,4 +50,19 @@ func (r repository) GetAllParkingZones() ([]*ParkingZone, error) {
 		return nil, result.Error
 	}
 	return zones, nil
+}
+func (r repository) UpdateParkingZone(id uint, zone *ParkingZone) error {
+	result := r.db.Model(&ParkingZone{}).Where("id = ?", id).Updates(zone)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+func (r repository) DeleteParkingZone(id uint) error {
+	result := r.db.Delete(&ParkingZone{}, id)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
 }

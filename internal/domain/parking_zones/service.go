@@ -2,6 +2,8 @@ package parkingzones
 
 import (
 	"spotssync/internal/domain/parking_zones/dto"
+
+	"gorm.io/gorm"
 )
 
 type service struct {
@@ -11,13 +13,6 @@ type service struct {
 func NewService(repo Repository) *service {
 	return &service{repo: repo}
 }
-
-// {
-//   "name": "Terminal 1 EV Charging",
-//   "type": "ev_charging",
-//   "total_capacity": 20,
-//   "price_per_hour": 5.50
-// }
 
 func (s *service) CreateParkingZone(req dto.CreateParkingZoneRequest) (*dto.ParkingZoneResponse, error) {
 
@@ -71,4 +66,45 @@ func (s *service) GetParkingZoneByID(id uint) (*dto.ParkingZoneResponse, error) 
 		TotalCapacity: parkingZone.TotalCapacity,
 		PricePerHour:  parkingZone.PricePerHour,
 	}, nil
+}
+
+func (s *service) UpdateParkingZone(id uint, req dto.UpdateParkingZoneRequest) (*dto.ParkingZoneResponse, error) {
+	parkingZone, err := s.repo.GetParkingZoneByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if req.Name != nil {
+		parkingZone.Name = *req.Name
+	}
+	if req.Type != nil {
+		parkingZone.Type = *req.Type
+	}
+	if req.TotalCapacity != nil {
+		parkingZone.TotalCapacity = *req.TotalCapacity
+	}
+	if req.PricePerHour != nil {
+		parkingZone.PricePerHour = *req.PricePerHour
+	}
+	if parkingZone == nil {
+		return nil, gorm.ErrRecordNotFound
+	}
+	err = s.repo.UpdateParkingZone(id, parkingZone)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.ParkingZoneResponse{
+		ID:            parkingZone.ID,
+		Name:          parkingZone.Name,
+		Type:          parkingZone.Type,
+		TotalCapacity: parkingZone.TotalCapacity,
+		PricePerHour:  parkingZone.PricePerHour,
+	}, nil
+}
+
+func (s *service) DeleteParkingZone(id uint) error {
+	err := s.repo.DeleteParkingZone(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }

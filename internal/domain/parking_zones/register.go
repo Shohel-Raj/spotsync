@@ -19,5 +19,7 @@ func ParkingZoneRegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 	api.POST("", parkingHandler.CreateParkingZone)
 	api.GET("", parkingHandler.GetParkingZones)
 	api.GET("/:id", parkingHandler.GetParkingZoneByID)
+	api.PUT("/:id", parkingHandler.updateParkingZone)
+	api.DELETE("/:id", parkingHandler.DeleteParkingZone)
 
 }
