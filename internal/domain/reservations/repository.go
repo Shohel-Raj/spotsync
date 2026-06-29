@@ -3,7 +3,6 @@ package reservations
 import (
 	"errors"
 	parkingzones "spotssync/internal/domain/parking_zones"
-	// "spotssync/internal/domain/parkingzones"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -24,6 +23,7 @@ type Repository interface {
 	UpdateReservation(id uint, reservation *Reservation) error
 	DeleteReservation(id uint) error
 	CancelReservation(id uint) error
+	GetMyReservations(userID uint) ([]*Reservation, error)
 }
 
 type repository struct {
@@ -123,4 +123,15 @@ func (r *repository) CreateReservation(ReservationData *Reservation) (*Reservati
 
 	return &booking, nil
 
+}
+
+func (r *repository) GetMyReservations(userID uint) ([]*Reservation, error) {
+	var reservations []*Reservation
+
+	result := r.db.Where("user_id = ?", userID).Find(&reservations)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return reservations, nil
 }

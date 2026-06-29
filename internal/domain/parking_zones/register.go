@@ -11,8 +11,8 @@ import (
 
 func ParkingZoneRegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 
-	parlkingRepository := NewRepository(db)
-	parkingService := NewService(parlkingRepository)
+	parkingRepository := NewRepository(db)
+	parkingService := NewService(parkingRepository)
 	parkingHandler := NewHandler(parkingService)
 	jwtService := auth.NewJWTService(cfg.JwtSecret)
 

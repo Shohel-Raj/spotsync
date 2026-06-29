@@ -12,9 +12,10 @@ func NewService(repo Repository) *service {
 	return &service{repo: repo}
 }
 
-func (s *service) CreateReservation(req dto.CreateReservationRequest) (*dto.ReservationResponse, error) {
+func (s *service) CreateReservation(req dto.CreateReservationRequest, UserId uint) (*dto.ReservationResponse, error) {
+
 	reservation := Reservation{
-		UserID:        req.UserID,
+		UserID:        UserId,
 		LicensePlate:  req.LicensePlate,
 		ParkingZoneID: req.ParkingZoneID,
 		Status:        "active",
@@ -107,4 +108,34 @@ func (s *service) GetAllReservations() ([]*dto.ReservationResponse, error) {
 		})
 	}
 	return responses, nil
+}
+
+func (s *service) DeleteReservation(id uint) error {
+	err := s.repo.DeleteReservation(id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *service) GetMyReservations(userID uint) ([]*dto.ReservationResponse, error) {
+	reservations, err := s.repo.GetMyReservations(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := make([]*dto.ReservationResponse, len(reservations))
+	for i, r := range reservations {
+		response[i] = &dto.ReservationResponse{
+			ID:            r.ID,
+			UserID:        r.UserID,
+			LicensePlate:  r.LicensePlate,
+			ParkingZoneID: r.ParkingZoneID,
+			Status:        r.Status,
+			CreatedAt:     r.CreatedAt,
+			UpdatedAt:     r.UpdatedAt,
+		}
+	}
+
+	return response, nil
 }
