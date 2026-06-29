@@ -21,7 +21,8 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
-					"error": "Missing authorization header",
+					"success": "false",
+					"massage": "Missing authorization header",
 				})
 			}
 
@@ -30,7 +31,8 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 
 			if len(parts) != 2 || parts[0] != "Bearer" {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
-					"error": "invalid authorization header format",
+					"success": "false",
+					"error":   "invalid authorization header format",
 				})
 			}
 
@@ -41,10 +43,10 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 			claims, err := jwtService.ValidateToken(tokenString)
 			if err != nil {
 				return c.JSON(http.StatusUnauthorized, map[string]string{
-					"error": "invalid or expired token",
+					"success": "false",
+					"error":   "invalid or expired token",
 				})
 			}
-
 			// store user info in context for handlers
 			c.Set("user_id", claims.UserID)
 			c.Set("user_email", claims.Email)
@@ -55,14 +57,16 @@ func AuthMiddleware(jwtService auth.JWTService) echo.MiddlewareFunc {
 		}
 	}
 }
-func AdminOnly(role string) echo.MiddlewareFunc {
+func AdminOnly() echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 
-			userRole := c.Get("user_role")
+			userRole := c.Get("user_role").(string)
 			if userRole != roleAdmin {
 				return c.JSON(http.StatusForbidden, map[string]string{
-					"error": "admin permission required",
+					"success": "false",
+					"message": "You do not have permission to access this resource",
+					"error":   "admin permission required",
 				})
 			}
 
@@ -70,17 +74,3 @@ func AdminOnly(role string) echo.MiddlewareFunc {
 		}
 	}
 }
-
-// func AdminOnly(next echo.HandlerFunc) echo.HandlerFunc {
-//     return func(c echo.Context) error {
-//         role, ok := c.Get("user_role").(string)
-//         if !ok || role != "admin" {
-//             return c.JSON(http.StatusForbidden, map[string]any{
-//                 "success": false,
-//                 "message": "forbidden",
-//                 "errors":  "admin permission required",
-//             })
-//         }
-//         return next(c)
-//     }
-// }

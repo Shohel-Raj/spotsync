@@ -1,9 +1,10 @@
 package parkingzones
 
 import (
-	"spotssync/internal/config"
-
 	"github.com/labstack/echo/v5"
+	"spotssync/internal/auth"
+	"spotssync/internal/config"
+	"spotssync/internal/middlewares"
 
 	"gorm.io/gorm"
 )
@@ -13,13 +14,14 @@ func ParkingZoneRegisterRoutes(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 	parlkingRepository := NewRepository(db)
 	parkingService := NewService(parlkingRepository)
 	parkingHandler := NewHandler(parkingService)
+	jwtService := auth.NewJWTService(cfg.JwtSecret)
 
 	api := e.Group("/api/v1/parkingzones")
 
-	api.POST("", parkingHandler.CreateParkingZone)
+	api.POST("", parkingHandler.CreateParkingZone, middlewares.AuthMiddleware(jwtService), middlewares.AdminOnly())
 	api.GET("", parkingHandler.GetParkingZones)
 	api.GET("/:id", parkingHandler.GetParkingZoneByID)
-	api.PUT("/:id", parkingHandler.updateParkingZone)
-	api.DELETE("/:id", parkingHandler.DeleteParkingZone)
+	api.PUT("/:id", parkingHandler.updateParkingZone, middlewares.AuthMiddleware(jwtService), middlewares.AdminOnly())
+	api.DELETE("/:id", parkingHandler.DeleteParkingZone, middlewares.AuthMiddleware(jwtService), middlewares.AdminOnly())
 
 }

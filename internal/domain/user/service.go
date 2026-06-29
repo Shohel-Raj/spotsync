@@ -66,7 +66,7 @@ func (s *service) LoginUser(req dto.LoginRequest) (*dto.LoginResponse, error) {
 	}
 
 	// generate token
-	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name, string(user.Role[0]))
+	token, err := s.jwtService.GenerateToken(user.ID, user.Email, user.Name, string(user.Role))
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
